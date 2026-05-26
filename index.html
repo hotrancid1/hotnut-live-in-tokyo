@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOTNUT Live in Tokyo - Timeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #f27c22;
+            --line-color: #ffcda8;
+            --bg-color: #f7f9fc;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --blue-main: #1e3a8a;
+            --blue-light: #e0f2fe;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* -------------------------------------
+           ระบบ Navigation (สลับวัน)
+           ------------------------------------- */
+        .nav-days {
+            display: flex;
+            gap: 8px; /* ลดช่องว่างนิดนึงให้ 4 ปุ่มพอดีจอ */
+            margin-bottom: 30px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 12px 5px; /* ปรับ padding ให้ปุ่มไม่แน่นไปบนมือถือ */
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            background: white;
+            color: var(--blue-main);
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            font-size: 13px; /* ปรับขนาดตัวอักษรนิดหน่อย */
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+            color: white;
+            border-color: #1e3a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        /* การจัดการแสดงผลหน้า */
+        .day-content { display: none; }
+        .day-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* -------------------------------------
+           หัวข้อ Day (กรอบฟ้า-ขาว กดได้)
+           ------------------------------------- */
+        .day-header-box {
+            display: block;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .day-header-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+        }
+
+        .day-sub { display: block; color: #2563eb; font-size: 14px; font-weight: 600; letter-spacing: 1px; margin-bottom: 5px; }
+        .day-main { display: block; color: #1e3a8a; font-size: 24px; font-weight: 600; }
+
+        /* -------------------------------------
+           Timeline & Cards
+           ------------------------------------- */
+        .timeline {
+            border-left: 2px solid var(--line-color);
+            margin-left: 20px;
+            padding-left: 35px;
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        .timeline-item { position: relative; margin-bottom: 35px; }
+
+        .timeline-icon {
+            position: absolute; left: -58px; top: 0;
+            width: 40px; height: 40px; background: #fff;
+            border: 2px solid var(--line-color); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; z-index: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #f1f5f9; }
+        .card-img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        .card-body { padding: 20px; }
+        
+        .time-badge { color: var(--primary-orange); font-weight: 600; font-size: 14px; margin-bottom: 8px; display: inline-block; margin-right: 10px; }
+        .route-badge { color: #3b82f6; font-weight: 600; font-size: 14px; margin-bottom: 8px; display: inline-block; }
+        
+        .card-title { font-size: 18px; font-weight: 600; margin: 0 0 10px 0; color: var(--text-dark); }
+        .card-text { font-size: 14px; color: var(--text-gray); line-height: 1.6; margin-bottom: 0; }
+        
+        .btn-orange {
+            display: flex; justify-content: center; align-items: center; width: 100%;
+            padding: 14px; background: var(--primary-orange); color: white;
+            text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 15px;
+            margin-top: 15px; box-sizing: border-box; transition: background 0.2s; border: none; cursor: pointer; gap: 8px;
+        }
+        .btn-orange:hover { background-color: #e06c15; }
+        .timeline-item:last-child { margin-bottom: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="nav-days">
+        <div class="nav-btn active" onclick="switchDay(1)">DAY 1</div>
+        <div class="nav-btn" onclick="switchDay(2)">DAY 2</div>
+        <div class="nav-btn" onclick="switchDay(3)">DAY 3</div>
+        <div class="nav-btn" onclick="switchDay(4)">DAY 4</div>
+    </div>
+
+    <div id="day1" class="day-content active">
+        <div class="day-header-box">
+            <span class="day-sub">DAY 1 : 24 OCT 2026</span>
+            <span class="day-main">Arrival & Ueno Vibe</span>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-icon">✈️</div>
+                <div class="card">
+                    <img src="https://cdn.cheapoguides.com/wp-content/uploads/sites/2/2023/03/narita-airport-terminal-1.jpg" alt="Narita Airport" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">07:30 น.</span>
+                        <h3 class="card-title">Narita Airport Terminal 1</h3>
+                        <p class="card-text">Narita Aiport Terminal 1 จัดการผ่านตม. รับกระเป๋า และเตรียมตัวนั่งรถไฟเข้าเมือง</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚆</div>
+                <div class="card">
+                    <img src="https://www.keisei.co.jp/keisei/tetudou/skyliner/th/assets/images/skyliner/index/skyliner_poster.jpg" alt="Keisei Skyliner" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">09:00 น.</span>
+                        <h3 class="card-title">นั่ง Keisei Skyliner ไป Ueno</h3>
+                        <p class="card-text">นั่งรถไฟ Keisei Skyliner ลง Ueno Station ประมาณ 50 นาที</p>                 
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🧳</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">10:10 น.</span>
+                        <h3 class="card-title">ฝากกระเป๋า Hop Inn Tokyo Ueno</h3>
+                        <p class="card-text">ฝากกระเป๋าที่โรงแรม <a href="https://maps.app.goo.gl/bRYqPFz9jP7XcD4S9" target="_blank">Hop Inn Tokyo Ueno</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🐼</div>
+                <div class="card">
+                    <img src="https://static.gltjp.com/glt/data/directory/11000/10152/20260126_021306_6f250259_w1920.webp" alt="Ueno Zoo Panda" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">10:30 น.</span>
+                        <h3 class="card-title">เดินเที่ยวเล่น Ueno Zoo และ ตลาด Ameyoko</h3>
+                        <p class="card-text">แวะชมความน่ารักของสัตว์ที่สวนสัตว์อุเอโนะ และเดินช้อปปิ้งหาของกินอร่อยๆ สตรีทฟู้ดสไตล์ญี่ปุ่นที่ตลาด Ameyoko</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🏨</div>
+                <div class="card">
+                    <img src="https://image-tc.galaxy.tf/wijpeg-a34qt6mni3cbq36eyoip1b9p0/hotel-collection-overview_og-image.jpg" alt="Hop Inn Tokyo Ueno" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">15:00 น.</span>
+                        <h3 class="card-title">Check In โรงแรม Hop Inn Tokyo Ueno</h3>
+                        <p class="card-text">กลับมาเช็คอินเข้าที่พัก นำสัมภาระเข้าห้อง พักผ่อนเติมพลัง</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🛍️</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">16:00 น.</span>
+                        <h3 class="card-title">เดินเที่ยวเล่นตึกม่วง Takeya 1</h3>
+                        <p class="card-text">ช้อปปิ้งของฝาก เครื่องสำอาง และขนมญี่ปุ่นราคาถูกที่ตึกม่วงยอดฮิต</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚇</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">18:00 น.</span>
+                        <span class="route-badge">การเดินทาง (ROUTE)</span>
+                        <h3 class="card-title">Tokyo Subway Oedo Line</h3>
+                        <p class="card-text">นั่งจาก <strong style="color: #E60080;">Ueno-okachimachi Sta. (E09)</strong> ไปลงสถานี <strong style="color: #E60080;">Akabanebashi Sta. (E21)</strong> 280¥<br>⏱️ ใช้เวลาประมาณ 40 นาที<br>🚶‍♂️ ใช้ทางออก <strong>Akabanebashi Exit</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🗼</div>
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?q=80&w=800&auto=format&fit=crop" alt="Tokyo Tower" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">19:00 น.</span>
+                        <h3 class="card-title">Tokyo Tower และถ่ายรูปที่ 7-11</h3>
+                        <p class="card-text">เดินเล่นถ่ายรูป Tokyo Tower แถว Prince Shiba Park และแวะถ่ายรูปเล่นที่ <a href="https://maps.app.goo.gl/QNkjBRkqYaJUbY6p7" target="blank">7-11</a> ที่มีฉากหลังเป็นหอคอย</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚇</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">20:20 น.</span>
+                        <span class="route-badge">เดินทางกลับ (RETURN)</span>
+                        <h3 class="card-title">รถไฟใต้ดินสาย Oedo Line</h3>
+                        <p class="card-text">นั่งจาก <strong style="color: #E60080;">Akabanebashi Sta. (E21)</strong> ไปลงสถานี <strong style="color: #E60080;">Ueno-okachimachi Sta. (E09)</strong><br>⏱️ ใช้เวลาประมาณ 40 นาที<br>🚶‍♂️ ใช้ทางออก <strong>A8 Exit</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🌙</div>
+                <div class="card">
+                    <img src="https://www.ueno-ameyoko.jp/wp/wp-content/uploads/D0022.png" alt="Don Quijote Ueno" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">21:00 น.</span>
+                        <h3 class="card-title">เดินเล่น Don Quijote และพักผ่อน</h3>
+                        <p class="card-text">แวะซื้อของใช้ที่ <a href="https://maps.app.goo.gl/eEV6URrhtTU9372M7" target="blank">Don Quijote Ueno</a> ปิด 04:00 <br>ไม่ก็ <a href="https://maps.app.goo.gl/uAZjydaK4zWhVKLB6" target="blank">Don Quijote Okachimachi</a> ปิด 01:00 </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="day2" class="day-content">
+        <div class="day-header-box">
+            <span class="day-sub">DAY 2 : 25 OCT 2026</span>
+            <span class="day-main">Akiba & Harajuku</span>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-icon">⏰</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">07:00 น.</span>
+                        <h3 class="card-title">🥱ตื่นนอน+เตรียมตัว</h3>
+                        <p class="card-text">ตื่นนอนอาบน้ำ และเผื่อเวลานัทแต่งหน้า</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚇</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">08:30 น.</span>
+                        <span class="route-badge">การเดินทาง (ROUTE)</span>
+                        <h3 class="card-title">รถไฟใต้ดินสาย Tokyo Metro <strong style="color: #F39700;">Ginza Line</strong></h3>
+                        <p class="card-text">ขึ้นรถไฟที่สถานี <strong style="color: #F39700;">Ueno Sta. (G16)</strong> ไปลงสถานี <strong style="color: #F39700;">Suehirochō Sta. (G14)</strong> เพื่อมุ่งหน้าสู่ย่านอากิฮาบาระ 180¥<br>⏱️ ใช้เวลาประมาณ 15 นาที<br>🚶‍♂️ ใช้ทางออก <strong>A1 Exit</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">⛩️</div>
+                <div class="card">
+                    <img src="https://cdn.zekkei-japan.jp/datas/cache/images/2024/04/18/800x533_ea1e9d427fb5664c32c517a73e421e58_9a48cab099cda3e9cab63f88f4be06de577ae878.jpg" alt="Kanda Shrine" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">09:00 น.</span>
+                        <h3 class="card-title">ศาลเจ้าคันดะ (Kanda Shrine)</h3>
+                        <p class="card-text"><a href="https://maps.app.goo.gl/SY794Z28fbsroCWd7" target"blank">ศาลเจ้าคันดะ<a/>เดินเล่น ถ่ายรูป ซื้อเครื่องราง IT และเขียนแผ่นไม้</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">⚡</div>
+                <div class="card">
+                    <img src="https://d3fphkxyf5o5bm.cloudfront.net/image-resize/format=webp,w=720/1DB1XKS9D4oEf4GxtejeiZiPHeZ4z8Q8" alt="Akihabara" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">ช่วงเช้า-กลางวัน</span>
+                        <h3 class="card-title">ย่าน Akihabara</h3>
+                        <p class="card-text">เดินเที่ยวเล่น Radio Kaikan, AmiAmi, Taito Station เกม อนิเมะ โมเดล และวัฒนธรรมป๊อปคัลเจอร์ของญี่ปุ่น เดินช้อปปิ้งกันเพลินๆ หาอะไรกินที่นี่เลยก็ได้</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚆</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">14:00 น.</span>
+                        <span class="route-badge">การเดินทาง (ROUTE)</span>
+                        <h3 class="card-title">ไป Harajuku ใช้รถไฟ <strong style="color: #81C241;">JR Yamanote Line</strong></h3>
+                        <p class="card-text">ขึ้นรถไฟจากสถานี <strong style="color: #81C241;">Akihabara Sta. (JY03)</strong> นั่งยาวไปลงที่สถานี <strong style="color: #81C241;">Harajuku Sta. (JY19)</strong> 210¥<br>⏱️ ใช้เวลาเดินทางประมาณ 40 นาที<br>🚶‍♂️ ใช้ทางออก <strong>Takeshita Exit</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🥞</div>
+                <div class="card">
+                    <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/09/9d/f6/cc/takeshita-dori.jpg?w=900&h=-1&s=1" alt="Takeshita Street" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">15:00 น.</span>
+                        <h3 class="card-title">Takeshita Street</h3>
+                        <p class="card-text">ตามล่าหาแฟชั่น JiraiKei Noemie หา Dickies หาเสื้อผ้ามือสอง</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🏢</div>
+                <div class="card">
+                    <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/ad/9e/b8/caption.jpg?w=1200&h=-1&s=1" alt="Laforet Harajuku" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">ช่วงบ่าย</span>
+                        <h3 class="card-title">Laforet Harajuku</h3>
+                        <p class="card-text">ห้างสรรพสินค้าศูนย์รวมแฟชั่น JiraiKei และอื่น ๆ</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">👟</div>
+                <div class="card">
+                    <img src="https://instagram.fbkk5-4.fna.fbcdn.net/v/t51.82787-15/671129868_17953631703137383_3945424985255909570_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ig_cache_key=Mzg4MTAwNzcxMTQ5MjQ2NDYyOA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=0IMGcacbfw8Q7kNvwGGeDSs&_nc_oc=AdrVZagfbgpctSfIT6JL9vl9Yc3QqEpKzVOfCBOQSmNo_g6n2OOdEnPKGwGMRk5uLG0&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fbkk5-4.fna&_nc_gid=tCha-mE5e1px84OAgAvb9A&_nc_ss=7a22e&oh=00_Af7cGgj5sCLFrBtJhHFzFeiqQRg11Zk84O18taTyKnZ-gQ&oe=6A1B9ABE&auto=format&fit=crop" alt="Adidas RAYARD MIYASHITA PARK" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">ช่วงเย็น</span>
+                        <h3 class="card-title">Adidas Brand Center (RAYARD MIYASHITA PARK)</h3>
+                        <p class="card-text">ช้อปปิ้งที่ช็อปแบรนด์ <a href="https://maps.app.goo.gl/4sh4y51oVdmC4pfi6" target="blank">Adidas</a> ขนาดใหญ่ ตามล่าหาเสื้อแรร์ ๆ และเสื้อแจ็คเก็ต</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🏙️</div>
+                <div class="card">
+                    <img src="https://www.gotokyo.org/en/spot/66/images/main.webp" alt="Shibuya109" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">ช่วงค่ำ</span>
+                        <h3 class="card-title">Shibuya 109</h3>
+                        <p class="card-text">ตามล่าหาแฟชั่น JiraiKei และหาของฝาก</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚇</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">19:00 น.</span>
+                        <span class="route-badge">เดินทางกลับ (RETURN)</span>
+                        <h3 class="card-title">รถไฟสาย JR Yamanote Line</h3>
+                        <p class="card-text">ขึ้นรถไฟ <strong style="color: #81C241;">Shibuya Sta. (JY20)</strong> นั่งไปลง <strong style="color: #81C241;">Okachimachi Sta. (JY04)</strong> 260¥<br>⏱️ ใช้เวลาเดินทางประมาณ 40 นาที<br>🚶‍♂️ ใช้ทางออก <strong>North Exit</strong></p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🌙</div>
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=800&auto=format&fit=crop" alt="Ameyoko Night" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">20:00 น.</span>
+                        <h3 class="card-title">เดินเที่ยวเล่น Ameyoko และพักผ่อน</h3>
+                        <p class="card-text">เดินหาของกินมื้อค่ำ เที่ยวเล่นบรรกาศยามค่ำคืนย่าน Ameyoko แถวที่พัก ก่อนกลับเข้าโรงแรมเพื่อพักผ่อนอย่างเต็มที่</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="day3" class="day-content">
+        <div class="day-header-box">
+            <span class="day-sub">DAY 3 : 26 OCT 2026</span>
+            <span class="day-main">Kamakura Vibe</span>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-icon">⏰</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">07:00 น.</span>
+                        <h3 class="card-title">🥱ตื่นนอน+เตรียมตัว</h3>
+                        <p class="card-text">ตื่นเช้าเตรียมความพร้อม เผื่อเวลานัทแต่งหน้า</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚆</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">08:20 น.</span>
+                        <span class="route-badge">การเดินทาง (ROUTE)</span>
+                        <h3 class="card-title">เดินทางสู่เมืองคามาคุระ</h3>
+                        <p class="card-text">
+                            • ขึ้นรถไฟ JR Yamanote จาก <strong style="color: #81C241;">Okachimachi Sta. (JY04)</strong> ไปลง <strong style="color: #81C241;">Shimbashi Sta. (JY29)</strong> <br>
+                            • เปลี่ยนสายเป็นรถไฟ <strong style="color: #0067C0;">Yokosuka Line (JO18)</strong> ยิงยาวไปลง <strong style="color: #0067C0;">Kamakura Sta. (JO07)</strong><br>
+                            💸 ค่ารถไฟประมาณ <strong>1,040¥</strong><br>
+                            ⏱️ ใช้เวลาเดินทางรวมประมาณ <strong>1 ชั่วโมง</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🎫</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">09:30 น.</span>
+                        <h3 class="card-title">ถึง Kamakura & ซื้อ Enoden Pass</h3>
+                        <p class="card-text">เดินทางถึงสถานี Kamakura แวะซื้อตั๋ว <strong>Enoden 1 Day Pass ราคา 800¥</strong> เพื่อใช้ขึ้นรถไฟสาย Enoden เที่ยวได้ไม่จำกัดรอบตลอดทั้งวัน!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🍡</div>
+                <div class="card">
+                    <img src="https://kiji.life/kiji2025/wp-content/uploads/2019/02/DSC_1858.jpg" alt="Komachi-dori Kamakura" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge" style="color: #005C3F;">สถานี EN15 Kamakura</span>
+                        <h3 class="card-title">ถนนโคมาจิโดริ (Komachi-dori)</h3>
+                        <p class="card-text">เดินเล่นชิลๆ ถ่ายรูปมั่วๆ หาของกินง่ายๆ สตรีทฟู้ด ขนมหวาน และไอศกรีมตลอดสองฝั่งทาง</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🏯</div>
+                <div class="card">
+                    <img src="https://www.hashcorner.com/wp-content/uploads/2023/09/Kamakura-Kotokuin-Temple-08.jpg" alt="Daibutsu Kamakura" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge" style="color: #005C3F;">สถานี EN12 Hase</span>
+                        <h3 class="card-title">วัดโคโตกูอิง & KANNON COFFEE</h3>
+                        <p class="card-text">ไหว้สักการะพระใหญ่ไดบุตสึแห่งคามาคุระ และแวะพักจิบกาแฟฮอปปิ้งที่คาเฟ่สุดน่ารัก KANNON COFFEE kamakura ระวังอีกาจิก!!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🌊</div>
+                <div class="card">
+                    <img src="https://cdn.gaijinpot.com/app/uploads/sites/6/2017/12/inamuragasaki-beach.jpg" alt="Inamuragasaki Beach" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge" style="color: #005C3F;">สถานี EN10 Inamuragasaki</span>
+                        <h3 class="card-title">หาดทรายสีดำวิวฟูจิ</h3>
+                        <p class="card-text">แวะรับลมทะเล ถ่ายรูปคู่กับหาดทรายสีดำหากฟ้าเปิดจะสามารถมองเห็นวิวภูเขาไฟฟูจิได้ แต่ถ้าวันนั้นเมฆเยอะ Skip สถานีนี้แล้วกลับกัน</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">📸</div>
+                <div class="card">
+                    <img src="https://www.hashcorner.com/wp-content/uploads/2023/09/Kamakura-Kamakurakoko-Mae-Station-1.jpg" alt="Kamakurakokomae Slam Dunk" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge" style="color: #005C3F;">สถานี EN08 Kamakurakokomae</span>
+                        <h3 class="card-title">จุดถ่ายรูป Slam Dunk</h3>
+                        <p class="card-text">แลนด์มาร์กสำคัญ! ถ่ายรูปบริเวณทางข้ามรถไฟที่มีฉากหลังเป็นท้องทะเลสีฟ้าแบบเดียวกับฉากในอนิเมะตำนานอย่าง Slam Dunk</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚇</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">14:00 น.</span>
+                        <span class="route-badge">เดินทางกลับ (RETURN)</span>
+                      <h3 class="card-title">เปลี่ยนสายที่สถานี <strong style="color: #005C3F;">EN01 Fujisawa</strong></h3>
+                        <p class="card-text">
+                            นั่ง Enoden มาลงสุดสายที่สถานี Fujisawa เพื่อต่อรถไฟขบวน <strong>Tōkaidō Line</strong> กลับเข้าเมืองโตเกียว<br><br>
+                            • จาก <strong style="color: #F39700;">Fujisawa Sta. (JT08)</strong> มุ่งหน้า <strong style="color: #F39700;">Tokyo Sta. (JT01)</strong><br>
+                          <em>(<strong style="color: #FE0000;">ไม่ต้อง</strong>ลงจากรถไฟ! ขบวนจะเปลี่ยนเป็นสาย <strong style="color: #F39700;">Ueno-Tokyo Line (JU01)</strong></em><br>
+                            • นั่งยาวไปลงที่ <strong style="color: #F39700;">Ueno Sta. (JU02)</strong><br>
+                            💸 ค่ารถไฟเที่ยวกลับประมาณ <strong>1,040¥</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🚶‍♂️</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">15:00 น.</span>
+                        <h3 class="card-title">ถึงสถานี Ueno</h3>
+                      <p class="card-text">เดินทางถึง <b>Ueno Sta.</b> 🚶‍ให้ใช้ทางออก <strong>Asakusa Exit</strong> กลับไปพักผ่อนที่โรงแรม</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">✨</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">หลังจาก 15:00 น. เป็นต้นไป</span>
+                        <h3 class="card-title">Free Plan</h3>
+                        <p class="card-text">Free Plan! พักผ่อนเอาแรงที่โรงแรม หรือจะเดินชิล ๆ รอบย่าน Ueno ก่อน Shopping Time ˚˖𓍢ִ໋✧🛍️˚.🎀༘⋆</p>
+                    </div>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-icon">🛍️</div>
+                <div class="card">
+                    <img src="https://today-obs.line-scdn.net/0h57pXEAgYahhNIXuMMygVT3V3Zml-R3ARb0QmdzspYC1mDX8ddxM5ezx2MDRpGC8ZbU52fzsiZCEzRn4ZIw/w1200" alt="Tokyo Shopping" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">หลัง 18:00 น.</span>
+                        <h3 class="card-title">Shopping Time! ได้เวลาซื้อของฝาก 😋</h3>
+                        <p class="card-text">ซื้อของฝากต่างๆ  <strong>Don Quijote, Takeya 1, Matsukiyo, BIC Camera, Yodobashi</strong> หรือ <strong>Welcia</strong> จัดเต็มอาหารเสริม วิตามิน เครื่องสำอาง ขนม และของฝากญี่ปุ่น ลุยยาวๆ ยันดึกเลย!!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="day4" class="day-content">
+        
+        <div class="day-header-box">
+            <span class="day-sub">DAY 4 : 27 OCT 2026</span>
+            <span class="day-main">Good Bye Tokyo See You Osaka</span>
+        </div>
+
+        <div class="timeline">
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">🛏️</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">08:00 น.</span>
+                        <h3 class="card-title">ตื่นนอนไม่ต้องรีบ</h3>
+                        <p class="card-text">เช้าวันสุดท้ายของทริป วันนี้ไม่ต้องรีบตื่นก็ได้ นอนพักผ่อน แต่อย่าตื่นสายแบบรอบที่แล้วนะ 5555</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">🛎️</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">09:30 น.</span>
+                        <h3 class="card-title">Check Out & ฝากกระเป๋า</h3>
+                        <p class="card-text">เตรียมเช็คเอาต์ออกจากโรงแรม (ก่อน 10:00 น.) และฝากกระเป๋าเดินทางไว้กับทางโรงแรมก่อนออกไปเดินเล่นส่งท้าย</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">🚶‍♂️</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">09:40 น.</span>
+                        <h3 class="card-title">เดินเล่นเก็บตก</h3>
+                        <p class="card-text">เดินเล่นชิลๆ แถวที่พักย่าน Ameyoko หรือจะไป Akihabara เพื่อเก็บตกของที่ยังไม่ได้ซื้อ และซึมซับบรรยากาศ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">🚆</div>
+                <div class="card">
+                    <img src="https://www.keisei.co.jp/keisei/tetudou/skyliner/th/assets/images/skyliner/index/skyliner_poster.jpg" alt="Keisei Skyliner" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">13:20 น.</span>
+                        <span class="route-badge">การเดินทาง (ROUTE)</span>
+                        <h3 class="card-title">นั่ง Keisei Skyliner กลับสนามบิน</h3>
+                        <p class="card-text">กลับมารับกระเป๋าที่โรงแรม แล้วมาขึ้นรถไฟ <strong>Keisei Skyliner รอบ 13:20 น.</strong> ไป Narita Airport Terminal 1<br><br>💡 <em>แนะนำ: แลกเป็นบัตรที่สถานีล่วงหน้าไว้สักวันนึงก่อนเดินทางกลับ เพื่อป้องกันปัญหาคนต่อคิวเยอะ</em></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">🧳</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">14:20 น.</span>
+                        <h3 class="card-title">โหลดกระเป๋าสัมภาระ</h3>
+                        <p class="card-text">ไปที่เคาน์เตอร์สายการบิน <b>ZIPAIR</b> บริเวณ <strong>ชั้น 4F North Wing Counter: C</strong> เพื่อทำการโหลดกระเป๋า (เช็คอินออนไลน์ล่วงหน้ามาก่อนเพื่อความรวดเร็ว)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">🛍️</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">15:00 น.</span>
+                        <h3 class="card-title">เข้าเกท & Duty Free</h3>
+                        <p class="card-text">ผ่านจุดตรวจค้นและตม. เข้าสู่โซนเกท หาอะไรกิน และช้อปปิ้งของฝากปิดท้ายที่ Duty Free<br>⚠️ <em>ควรไปสแตนด์บายที่หน้าเกทก่อนเวลาเครื่องออกอย่างน้อย 1 ชั่วโมง</em></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">✈️</div>
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop" alt="Airplane" class="card-img">
+                    <div class="card-body">
+                        <span class="time-badge">17:10 น.</span>
+                        <h3 class="card-title">Go To BKK</h3>
+                        <p class="card-text">ออกเดินทางกลับกรุงเทพมหานคร ด้วยสายการบิน <strong>ZIPAIR เที่ยวบิน ZG51</strong> ลาก่อนโตเกียว!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-icon">🏠</div>
+                <div class="card">
+                    <div class="card-body">
+                        <span class="time-badge">21:30 น.</span>
+                        <h3 class="card-title">ถึงสนามบินสุวรรณภูมิ</h3>
+                        <p class="card-text">เดินทางถึงสนามบินสุวรรณภูมิ (BKK) รับกระเป๋าสัมภาระ และเดินทางกลับชลบุรี!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function switchDay(dayNumber) {
+        // ซ่อนเนื้อหาทุกวัน
+        document.querySelectorAll('.day-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // เอาสีปุ่ม active ออกจากทุกปุ่ม
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // แสดงเนื้อหาวันที่เลือก
+        document.getElementById('day' + dayNumber).classList.add('active');
+
+        // ใส่สีปุ่มที่กด
+        event.currentTarget.classList.add('active');
+
+        // เลื่อนหน้าจอขึ้นไปบนสุด
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+</script>
+
+</body>
+</html>
